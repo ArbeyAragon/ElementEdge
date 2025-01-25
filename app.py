@@ -9,6 +9,14 @@ import cv2
 from flask import Response
 import threading
 
+# Colores de la paleta
+palette = {
+    "background": "#102026",
+    "border": "#5D7366",
+    "area": "#565902",
+    "highlight": "#ECF22E",
+    "secondary": "#EDF25E",
+}
 
 # Inicializar las colas para los signos vitales
 heart_rate_queue = deque(maxlen=10)  # Nivel cardíaco
@@ -240,10 +248,27 @@ def update_vital_signs(n_intervals):
     blood_pressure_queue.append(generate_random_value(110, 130))
 
     # Crear gráficos para cada cola
-    heart_rate_fig = go.Figure(go.Scatter(y=list(heart_rate_queue), mode="lines+markers"))
-    oxygen_level_fig = go.Figure(go.Bar(y=list(oxygen_level_queue)))
-    temperature_fig = go.Figure(go.Scatter(y=list(temperature_queue), fill="tozeroy"))
-    blood_pressure_fig = go.Figure(go.Scatter(y=list(blood_pressure_queue), mode="lines"))
+    heart_rate_fig = go.Figure(go.Scatter(
+        y=list(heart_rate_queue), 
+        mode="lines+markers",
+        line=dict(color=palette["highlight"], width=2),
+        marker=dict(size=8, color=palette["secondary"], symbol="circle"),
+    ))
+    oxygen_level_fig = go.Figure(go.Bar(
+        y=list(oxygen_level_queue), 
+        marker_color=palette["area"]
+    ))
+    temperature_fig = go.Figure(go.Scatter(
+        y=list(temperature_queue), 
+        fill="tozeroy", 
+        line=dict(color=palette["border"], width=2),
+        fillcolor=palette["secondary"],
+    ))
+    blood_pressure_fig = go.Figure(go.Scatter(
+        y=list(blood_pressure_queue), 
+        mode="lines", 
+        line=dict(color=palette["area"], width=2),
+    ))
 
     # Configurar estilos de los gráficos
     for fig, title in zip(
@@ -255,13 +280,14 @@ def update_vital_signs(n_intervals):
             margin=dict(l=10, r=10, t=30, b=10),
             xaxis_title="Time (Last 10 seconds)",
             yaxis_title=title.split(" ")[0],
-            plot_bgcolor="#102026",
-            paper_bgcolor="#102026",
-            font=dict(color="#ECF22E"),
+            plot_bgcolor=palette["background"],
+            paper_bgcolor=palette["background"],
+            font=dict(color=palette["highlight"]),
+            xaxis=dict(showgrid=False, color=palette["secondary"]),
+            yaxis=dict(showgrid=True, gridcolor=palette["border"], color=palette["secondary"]),
         )
 
     return heart_rate_fig, oxygen_level_fig, temperature_fig, blood_pressure_fig
-
 
 
 # Añadir una variable global para el marcador seleccionado
