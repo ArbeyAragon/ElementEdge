@@ -43,9 +43,9 @@ marker_colors = {
 
 # Asignar URL a los iconos según el tipo
 icon_urls = {
-    "Fire": "https://cdn-icons-png.flaticon.com/512/1828/1828884.png",
-    "Rescued": "https://cdn-icons-png.flaticon.com/512/3523/3523063.png",
-    "Firefighter": "https://cdn-icons-png.flaticon.com/512/4974/4974664.png",
+    "Fire": "https://arbeyaragon.github.io/ElementEdge/fire.png",
+    "Rescued": "https://arbeyaragon.github.io/ElementEdge/person_danger.png",
+    "Firefighter": "https://arbeyaragon.github.io/ElementEdge/fireworker.png",
 }
 
 # Configurar captura de video
