@@ -162,26 +162,6 @@ app.layout = dbc.Container(
     ],
 )
 
-# Callback para mostrar información del marcador seleccionado
-@app.callback(
-    Output("details", "children"),
-    Input({"type": "marker", "index": ALL}, "n_clicks"),
-    State({"type": "marker", "index": ALL}, "id"),
-)
-def display_marker_details(n_clicks, ids):
-    if not any(n_clicks):
-        return "Click on a marker to see details."
-    clicked_index = n_clicks.index(1)
-    marker_id = ids[clicked_index]["index"]
-    marker = next((m for m in markers if m["id"] == marker_id), None)
-    if marker:
-        return html.Div(
-            [
-                html.H4(marker["name"], style={"color": "#ECF22E"}),
-                html.P(f"Role: {marker['type']}", style={"color": "#EDF25E"}),
-            ]
-        )
-    return "No details available."
 
 # Callback para actualizar los signos vitales en la gráfica
 @app.callback(
@@ -215,6 +195,67 @@ def update_vital_signs(n_intervals):
     )
     return fig
 
-# Ejecutar la aplicación
+# Añadir una variable global para el marcador seleccionado
+selected_marker_id = None
+
+# Callback para manejar la selección de un marcador y actualizar su apariencia
+@app.callback(
+    Output({"type": "marker", "index": ALL}, "icon"),
+    Input({"type": "marker", "index": ALL}, "n_clicks"),
+    State({"type": "marker", "index": ALL}, "id"),
+)
+def update_marker_selection(n_clicks, ids):
+    global selected_marker_id
+    if not any(n_clicks):
+        return [dict(iconUrl=icon_urls[marker["type"]], iconSize=[30, 30], iconAnchor=[15, 15]) for marker in markers]
+
+    clicked_index = n_clicks.index(1)
+    selected_marker_id = ids[clicked_index]["index"]
+
+    # Actualizar los íconos según el marcador seleccionado
+    icons = []
+    for marker in markers:
+        if marker["id"] == selected_marker_id:
+            icons.append(
+                dict(
+                    iconUrl="https://arbeyaragon.github.io/ElementEdge/fireworker_selected.png",  # Ícono destacado
+                    iconSize=[40, 40],
+                    iconAnchor=[20, 20],
+                )
+            )
+        else:
+            icons.append(
+                dict(
+                    iconUrl=icon_urls[marker["type"]],
+                    iconSize=[30, 30],
+                    iconAnchor=[15, 15],
+                )
+            )
+    return icons
+
+# Callback para mostrar detalles del marcador seleccionado
+@app.callback(
+    Output("details", "children"),
+    Input({"type": "marker", "index": ALL}, "n_clicks"),
+    State({"type": "marker", "index": ALL}, "id"),
+)
+def display_marker_details(n_clicks, ids):
+    global selected_marker_id
+    if not any(n_clicks):
+        return "Click on a marker to see details."
+
+    clicked_index = n_clicks.index(1)
+    selected_marker_id = ids[clicked_index]["index"]
+    marker = next((m for m in markers if m["id"] == selected_marker_id), None)
+    if marker:
+        return html.Div(
+            [
+                html.H4(marker["name"], style={"color": "#ECF22E"}),
+                html.P(f"Role: {marker['type']}", style={"color": "#EDF25E"}),
+            ]
+        )
+    return "No details available."
+
 if __name__ == "__main__":
     app.run_server(debug=True)
+
