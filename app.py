@@ -66,6 +66,7 @@ def generate_frames():
 def video_feed():
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
+
 # Layout de la aplicación
 app.layout = dbc.Container(
     fluid=True,
@@ -78,35 +79,50 @@ app.layout = dbc.Container(
         dbc.Row(
             [
                 dbc.Col(
-                    dl.Map(
-                        style={
-                            "height": "80vh",
-                            "border": f"2px solid #5D7366",
-                            "background": "linear-gradient(135deg, #102026, #5D7366, #565902, #ECF22E, #EDF25E)",
-                        },
-                        center=(34.0522, -118.2437),
-                        zoom=13,
-                        children=[
-                            dl.TileLayer(),
-                            dl.LayerGroup(
-                                [
-                                    dl.Marker(
-                                        id={"type": "marker", "index": marker["id"]},
-                                        position=marker["location"],
-                                        children=[
-                                            dl.Tooltip(marker["type"]),
-                                            dl.Popup(f"{marker['name']} ({marker['type']})"),
-                                        ],
-                                        icon=dict(
-                                            iconUrl=icon_urls[marker["type"]],
-                                            iconSize=[30, 30],
-                                            iconAnchor=[15, 15],
-                                        ),
-                                    )
-                                    for marker in markers
-                                ]
+                    html.Div(
+                        [
+                            dl.Map(
+                                style={
+                                    "height": "80vh",
+                                    "border": f"2px solid #5D7366",
+                                    "background": "linear-gradient(135deg, #102026, #5D7366, #565902, #ECF22E, #EDF25E)",
+                                },
+                                center=(34.0522, -118.2437),
+                                zoom=13,
+                                children=[
+                                    dl.TileLayer(),
+                                    dl.LayerGroup(
+                                        [
+                                            dl.Marker(
+                                                id={"type": "marker", "index": marker["id"]},
+                                                position=marker["location"],
+                                                children=[
+                                                    dl.Tooltip(marker["type"]),
+                                                    dl.Popup(f"{marker['name']} ({marker['type']})"),
+                                                ],
+                                                icon=dict(
+                                                    iconUrl=icon_urls[marker["type"]],
+                                                    iconSize=[30, 30],
+                                                    iconAnchor=[15, 15],
+                                                ),
+                                            )
+                                            for marker in markers
+                                        ]
+                                    ),
+                                ],
+                            ),
+                            html.Div(
+                                "This is additional text displayed below the map.",
+                                style={
+                                    "textAlign": "center",
+                                    "backgroundColor": "#EDF25E",
+                                    "padding": "10px",
+                                    "fontWeight": "bold",
+                                    "marginTop": "10px",
+                                },
                             ),
                         ],
+                        style={"position": "relative"},
                     ),
                     width=8,
                 ),
@@ -137,23 +153,6 @@ app.layout = dbc.Container(
                 ),
             ]
         ),
-        dbc.Row(
-            [
-                dbc.Col(
-                    html.Div(
-                        "This is additional text displayed below the map.",
-                        style={
-                            "textAlign": "center",
-                            "backgroundColor": "#EDF25E",
-                            "padding": "10px",
-                            "fontWeight": "bold",
-                        },
-                    ),
-                    width=12,
-                ),
-            ],
-            style={"marginTop": "10px"},
-        ),
         dcc.Interval(
             id="update_interval",
             interval=1000,
@@ -161,6 +160,7 @@ app.layout = dbc.Container(
         ),
     ],
 )
+
 
 
 # Callback para actualizar los signos vitales en la gráfica
