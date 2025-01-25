@@ -93,7 +93,10 @@ def generate_frames():
 def video_feed():
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-# Layout de la aplicación
+# Historial de chat (lista inicial vacía)
+chat_history = []
+
+# Layout actualizado
 app.layout = dbc.Container(
     fluid=True,
     style={
@@ -138,14 +141,39 @@ app.layout = dbc.Container(
                                 ],
                             ),
                             html.Div(
-                                "This is additional text displayed below the map.",
-                                style={
-                                    "textAlign": "center",
-                                    "backgroundColor": "#EDF25E",
-                                    "padding": "10px",
-                                    "fontWeight": "bold",
-                                    "marginTop": "10px",
-                                },
+                                [
+                                    html.Div(
+                                        id="chat-history",
+                                        style={
+                                            "height": "300px",
+                                            "overflowY": "auto",
+                                            "padding": "10px",
+                                            "backgroundColor": "#5D7366",
+                                            "color": "#EDF25E",
+                                            "border": f"1px solid {palette['border']}",
+                                            "borderRadius": "5px",
+                                            "marginBottom": "10px",
+                                        },
+                                    ),
+                                    dbc.InputGroup(
+                                        [
+                                            dbc.Input(
+                                                id="chat-input",
+                                                placeholder="Type your message...",
+                                                style={"backgroundColor": "#102026", "color": "#ECF22E"},
+                                            ),
+                                            dbc.Button(
+                                                "Send",
+                                                id="send-button",
+                                                color="success",
+                                                n_clicks=0,
+                                                style={"backgroundColor": "#ECF22E", "color": "#102026"},
+                                            ),
+                                        ],
+                                        className="mb-3",
+                                    ),
+                                ],
+                                style={"marginTop": "10px"},
                             ),
                         ],
                         style={"position": "relative"},
@@ -163,17 +191,17 @@ app.layout = dbc.Container(
                             [
                                 dbc.Col(
                                     dcc.Graph(
-                                        id="heart_rate_graph", 
-                                        config={"displayModeBar": False}, 
-                                        style={"height": "150px"}
+                                        id="heart_rate_graph",
+                                        config={"displayModeBar": False},
+                                        style={"height": "150px"},
                                     ),
                                     width=6,
                                 ),
                                 dbc.Col(
                                     dcc.Graph(
-                                        id="oxygen_level_graph", 
-                                        config={"displayModeBar": False}, 
-                                        style={"height": "150px"}
+                                        id="oxygen_level_graph",
+                                        config={"displayModeBar": False},
+                                        style={"height": "150px"},
                                     ),
                                     width=6,
                                 ),
@@ -184,17 +212,17 @@ app.layout = dbc.Container(
                             [
                                 dbc.Col(
                                     dcc.Graph(
-                                        id="temperature_graph", 
-                                        config={"displayModeBar": False}, 
-                                        style={"height": "150px"}
+                                        id="temperature_graph",
+                                        config={"displayModeBar": False},
+                                        style={"height": "150px"},
                                     ),
                                     width=6,
                                 ),
                                 dbc.Col(
                                     dcc.Graph(
-                                        id="blood_pressure_graph", 
-                                        config={"displayModeBar": False}, 
-                                        style={"height": "150px"}
+                                        id="blood_pressure_graph",
+                                        config={"displayModeBar": False},
+                                        style={"height": "150px"},
                                     ),
                                     width=6,
                                 ),
@@ -229,6 +257,35 @@ app.layout = dbc.Container(
         ),
     ],
 )
+
+
+# Callback para manejar el chat
+@app.callback(
+    Output("chat-history", "children"),
+    [Input("send-button", "n_clicks")],
+    [State("chat-input", "value")],
+)
+def update_chat(n_clicks, user_message):
+    global chat_history
+
+    if n_clicks > 0 and user_message:
+        # Simular una respuesta del chatbot
+        bot_response = f"Bot: You said '{user_message}'"
+
+        # Actualizar el historial de mensajes
+        chat_history.append(f"User: {user_message}")
+        chat_history.append(bot_response)
+
+        # Construir el historial de chat como elementos de lista
+        chat_elements = [
+            html.Div(msg, style={"marginBottom": "5px"}) for msg in chat_history
+        ]
+        return chat_elements
+
+    # Si no hay mensajes nuevos, mostrar el historial actual
+    return [html.Div(msg, style={"marginBottom": "5px"}) for msg in chat_history]
+
+
 
 # Callback para actualizar los gráficos
 @app.callback(
