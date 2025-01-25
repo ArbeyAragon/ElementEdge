@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import firebase_admin
 from firebase_admin import credentials, firestore
 import cv2
@@ -51,7 +52,9 @@ def write_to_firestore(db, collection_name, document_id, data):
 
 if __name__ == "__main__":
     # Cambia el path por el archivo de tu clave de servicio
-    service_account_key_path = "serviceAccountKey.json"
+    # service_account_key_path = "serviceAccountKey.json"
+    service_account_key_path = "/home/root/ElementEdge/serviceAccountKey.json"
+
     db = initialize_firestore(service_account_key_path)
 
     if db:

@@ -5,6 +5,9 @@ import dash_bootstrap_components as dbc
 import random
 import plotly.graph_objs as go
 from collections import deque
+import cv2
+from flask import Response
+import threading
 
 # Crear la aplicación Dash
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -44,6 +47,24 @@ icon_urls = {
     "Rescued": "https://cdn-icons-png.flaticon.com/512/3523/3523063.png",
     "Firefighter": "https://cdn-icons-png.flaticon.com/512/4974/4974664.png",
 }
+
+# Configurar captura de video
+camera = cv2.VideoCapture(0)
+
+def generate_frames():
+    while True:
+        success, frame = camera.read()
+        if not success:
+            break
+        else:
+            _, buffer = cv2.imencode('.jpg', frame)
+            frame = buffer.tobytes()
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+@app.server.route('/video_feed')
+def video_feed():
+    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 # Layout de la aplicación
 app.layout = dbc.Container(
@@ -103,16 +124,12 @@ app.layout = dbc.Container(
                         ),
                         html.Div(
                             [
-                                html.Div(
-                                    [
-                                        html.Img(
-                                            src="https://cdn-icons-png.flaticon.com/512/833/833314.png",
-                                            style={"width": "50%", "border": "2px solid #5D7366"},
-                                        ),
-                                    ],
-                                    style={"marginTop": "20px"},
-                                )
-                            ]
+                                html.Img(
+                                    src="/video_feed",
+                                    style={"width": "100%", "border": "2px solid #5D7366"},
+                                ),
+                            ],
+                            style={"marginTop": "20px"},
                         ),
                     ],
                     width=4,
@@ -144,34 +161,6 @@ app.layout = dbc.Container(
         ),
     ],
 )
-
-# Agregar animación para el degradado ondulado
-app.index_string = """
-<!DOCTYPE html>
-<html>
-    <head>
-        {%metas%}
-        <title>{%title%}</title>
-        {%favicon%}
-        {%css%}
-        <style>
-            @keyframes gradientAnimation {
-                0% { background-position: 0% 50%; }
-                50% { background-position: 100% 50%; }
-                100% { background-position: 0% 50%; }
-            }
-        </style>
-    </head>
-    <body>
-        {%app_entry%}
-        <footer>
-            {%config%}
-            {%scripts%}
-            {%renderer%}
-        </footer>
-    </body>
-</html>
-"""
 
 # Callback para mostrar información del marcador seleccionado
 @app.callback(
