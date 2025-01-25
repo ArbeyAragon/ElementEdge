@@ -95,8 +95,10 @@ def video_feed():
 
 # Historial de chat (lista inicial vacía)
 chat_history = []
+# Logo de la aplicación (puedes cambiar la URL por el logo que desees)
+logo_url = "https://arbeyaragon.github.io/ElementEdge/logo.png"
 
-# Layout actualizado
+# Layout actualizado con el Header
 app.layout = dbc.Container(
     fluid=True,
     style={
@@ -105,6 +107,39 @@ app.layout = dbc.Container(
         "animation": "gradientAnimation 15s ease infinite",
     },
     children=[
+        # Header de la aplicación
+        dbc.Row(
+            [
+                dbc.Col(
+                    html.Img(
+                        src=logo_url,
+                        style={"height": "60px", "marginRight": "15px"},
+                    ),
+                    width="auto",
+                ),
+                dbc.Col(
+                    html.Div(
+                        [
+                            html.H1(
+                                "ElementEdge Monitoring",
+                                style={"color": "#ECF22E", "marginBottom": "5px"},
+                            ),
+                            html.P(
+                                "An application for monitoring vital signs, managing emergencies, and visualizing interactive maps.",
+                                style={"color": "#EDF25E", "fontSize": "16px"},
+                            ),
+                        ]
+                    ),
+                ),
+            ],
+            align="center",
+            style={
+                "padding": "10px",
+                "backgroundColor": "#5D7366",
+                "borderBottom": f"2px solid {palette['border']}",
+            },
+        ),
+        # Contenido principal
         dbc.Row(
             [
                 dbc.Col(
