@@ -9,6 +9,25 @@ import cv2
 from flask import Response
 import threading
 
+
+# Inicializar las colas para los signos vitales
+heart_rate_queue = deque(maxlen=10)  # Nivel cardíaco
+oxygen_level_queue = deque(maxlen=10)  # Nivel de oxígeno
+temperature_queue = deque(maxlen=10)  # Temperatura corporal
+blood_pressure_queue = deque(maxlen=10)  # Presión arterial
+
+# Función para generar valores simulados
+def generate_random_value(min_value, max_value):
+    return random.uniform(min_value, max_value)
+
+# Inicializar los datos con valores aleatorios
+for _ in range(10):
+    heart_rate_queue.append(generate_random_value(60, 100))  # Pulsaciones por minuto
+    oxygen_level_queue.append(generate_random_value(90, 100))  # Porcentaje de oxígeno
+    temperature_queue.append(generate_random_value(36, 37.5))  # Temperatura en °C
+    blood_pressure_queue.append(generate_random_value(110, 130))  # Presión sistólica
+
+
 # Crear la aplicación Dash
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
@@ -65,7 +84,6 @@ def generate_frames():
 @app.server.route('/video_feed')
 def video_feed():
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
 
 # Layout de la aplicación
 app.layout = dbc.Container(
@@ -133,10 +151,47 @@ app.layout = dbc.Container(
                             id="details",
                             style={"marginBottom": "20px", "color": "#EDF25E"},
                         ),
-                        dcc.Graph(
-                            id="vital_signs_graph",
-                            config={"displayModeBar": False},
-                            style={"height": "300px"},
+                        dbc.Row(
+                            [
+                                dbc.Col(
+                                    dcc.Graph(
+                                        id="heart_rate_graph", 
+                                        config={"displayModeBar": False}, 
+                                        style={"height": "150px"}
+                                    ),
+                                    width=6,
+                                ),
+                                dbc.Col(
+                                    dcc.Graph(
+                                        id="oxygen_level_graph", 
+                                        config={"displayModeBar": False}, 
+                                        style={"height": "150px"}
+                                    ),
+                                    width=6,
+                                ),
+                            ],
+                            style={"marginBottom": "10px"},
+                        ),
+                        dbc.Row(
+                            [
+                                dbc.Col(
+                                    dcc.Graph(
+                                        id="temperature_graph", 
+                                        config={"displayModeBar": False}, 
+                                        style={"height": "150px"}
+                                    ),
+                                    width=6,
+                                ),
+                                dbc.Col(
+                                    dcc.Graph(
+                                        id="blood_pressure_graph", 
+                                        config={"displayModeBar": False}, 
+                                        style={"height": "150px"}
+                                    ),
+                                    width=6,
+                                ),
+                            ],
+                            style={"marginBottom": "10px"},
                         ),
                         html.Div(
                             [
@@ -149,7 +204,13 @@ app.layout = dbc.Container(
                         ),
                     ],
                     width=4,
-                    style={"padding": "20px", "backgroundColor": "#565902"},
+                    style={
+                        "padding": "20px",
+                        "backgroundColor": "#565902",
+                        "height": "100vh",
+                        "display": "flex",
+                        "flexDirection": "column",
+                    },
                 ),
             ]
         ),
@@ -161,39 +222,47 @@ app.layout = dbc.Container(
     ],
 )
 
-
-
-# Callback para actualizar los signos vitales en la gráfica
+# Callback para actualizar los gráficos
 @app.callback(
-    Output("vital_signs_graph", "figure"),
+    [
+        Output("heart_rate_graph", "figure"),
+        Output("oxygen_level_graph", "figure"),
+        Output("temperature_graph", "figure"),
+        Output("blood_pressure_graph", "figure"),
+    ],
     Input("update_interval", "n_intervals"),
 )
 def update_vital_signs(n_intervals):
-    # Agregar un nuevo valor a la cola
-    vital_signs_queue.append(generate_vital_sign())
+    # Actualizar las colas con nuevos valores
+    heart_rate_queue.append(generate_random_value(60, 100))
+    oxygen_level_queue.append(generate_random_value(90, 100))
+    temperature_queue.append(generate_random_value(36, 37.5))
+    blood_pressure_queue.append(generate_random_value(110, 130))
 
-    # Crear la figura de Plotly
-    fig = go.Figure()
-    fig.add_trace(
-        go.Scatter(
-            y=list(vital_signs_queue),
-            mode="lines+markers",
-            line=dict(color="#ECF22E", width=2),
-            marker=dict(size=10, color="#EDF25E", symbol="circle"),
+    # Crear gráficos para cada cola
+    heart_rate_fig = go.Figure(go.Scatter(y=list(heart_rate_queue), mode="lines+markers"))
+    oxygen_level_fig = go.Figure(go.Bar(y=list(oxygen_level_queue)))
+    temperature_fig = go.Figure(go.Scatter(y=list(temperature_queue), fill="tozeroy"))
+    blood_pressure_fig = go.Figure(go.Scatter(y=list(blood_pressure_queue), mode="lines"))
+
+    # Configurar estilos de los gráficos
+    for fig, title in zip(
+        [heart_rate_fig, oxygen_level_fig, temperature_fig, blood_pressure_fig],
+        ["Heart Rate (BPM)", "Oxygen Level (%)", "Temperature (°C)", "Blood Pressure (Systolic)"],
+    ):
+        fig.update_layout(
+            title=title,
+            margin=dict(l=10, r=10, t=30, b=10),
+            xaxis_title="Time (Last 10 seconds)",
+            yaxis_title=title.split(" ")[0],
+            plot_bgcolor="#102026",
+            paper_bgcolor="#102026",
+            font=dict(color="#ECF22E"),
         )
-    )
-    fig.update_layout(
-        title="Vital Signs Over Time",
-        margin=dict(l=20, r=20, t=40, b=20),
-        xaxis_title="Time (Last 10 seconds)",
-        yaxis_title="Vital Sign Value",
-        xaxis=dict(showgrid=False),
-        yaxis=dict(range=[50, 120], showgrid=True),
-        plot_bgcolor="#102026",
-        paper_bgcolor="#102026",
-        font=dict(color="#ECF22E"),
-    )
-    return fig
+
+    return heart_rate_fig, oxygen_level_fig, temperature_fig, blood_pressure_fig
+
+
 
 # Añadir una variable global para el marcador seleccionado
 selected_marker_id = None
